@@ -1,0 +1,125 @@
+/* ====================================================================
+   FraudShield AI - dashboard theme
+   Premium fintech look: dark navy, electric blue, white, light gray.
+   ==================================================================== */
+
+:root {
+    --fs-navy: #0b1f3a;
+    --fs-navy-2: #12294d;
+    --fs-blue: #3b82f6;
+    --fs-blue-bright: #2563eb;
+    --fs-gray: #64748b;
+    --fs-light: #f1f5f9;
+    --fs-green: #16a34a;
+    --fs-amber: #f59e0b;
+    --fs-red: #dc2626;
+}
+
+/* App background */
+.stApp {
+    background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+}
+
+/* Sidebar - dark navy */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, var(--fs-navy) 0%, var(--fs-navy-2) 100%);
+}
+section[data-testid="stSidebar"] * {
+    color: #e2e8f0 !important;
+}
+
+/* Page header block */
+.fs-header {
+    background: linear-gradient(120deg, var(--fs-navy) 0%, var(--fs-blue-bright) 100%);
+    padding: 22px 26px;
+    border-radius: 14px;
+    margin-bottom: 18px;
+    box-shadow: 0 6px 18px rgba(11, 31, 58, 0.25);
+}
+.fs-header-title {
+    color: #ffffff;
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+}
+.fs-header-sub {
+    color: #cbd5e1;
+    font-size: 14px;
+    margin-top: 4px;
+}
+
+/* KPI cards */
+.fs-kpi {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+    margin-bottom: 8px;
+    min-height: 96px;
+}
+.fs-kpi-label {
+    color: var(--fs-gray);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+.fs-kpi-value {
+    color: var(--fs-navy);
+    font-size: 26px;
+    font-weight: 800;
+    margin-top: 4px;
+}
+.fs-kpi-sub {
+    color: var(--fs-gray);
+    font-size: 12px;
+    margin-top: 2px;
+}
+
+/* Risk badges */
+.fs-badge {
+    color: #ffffff;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Section divider */
+.fs-section {
+    color: var(--fs-navy);
+    font-size: 18px;
+    font-weight: 700;
+    border-left: 4px solid var(--fs-blue);
+    padding-left: 10px;
+    margin: 18px 0 10px 0;
+}
+
+/* Buttons */
+.stButton > button, .stDownloadButton > button {
+    background: var(--fs-blue-bright);
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+}
+.stButton > button:hover, .stDownloadButton > button:hover {
+    background: var(--fs-navy);
+    color: #ffffff;
+}
+
+/* Brand block in sidebar */
+.fs-brand {
+    font-size: 22px;
+    font-weight: 900;
+    color: #ffffff !important;
+    letter-spacing: 0.5px;
+    padding: 6px 0 0 0;
+}
+.fs-brand-sub {
+    font-size: 11px;
+    color: #93c5fd !important;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}

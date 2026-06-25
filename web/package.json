@@ -1,0 +1,28 @@
+{
+  "name": "fraudshield-ai-web",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "FraudShield AI — React + Tailwind dashboard for payment fraud sequence detection (LSTM/RNN).",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview --port 4173",
+    "export-data": "cd .. && python src/export_dashboard_data.py"
+  },
+  "dependencies": {
+    "lucide-react": "^0.460.0",
+    "papaparse": "^5.4.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "recharts": "^2.13.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.49",
+    "tailwindcss": "^3.4.15",
+    "vite": "^5.4.11"
+  }
+}

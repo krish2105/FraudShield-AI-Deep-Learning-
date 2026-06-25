@@ -1,0 +1,31 @@
+# FraudShield AI - Python dependencies
+# Install with:  pip install -r requirements.txt
+
+# Core data stack
+pandas>=2.0
+numpy>=1.24
+scikit-learn>=1.3
+
+# Deep learning (LSTM / GRU / 1D-CNN / Autoencoder) — PyTorch.
+# NOTE: we use PyTorch, not TensorFlow. On Apple Silicon + Python 3.13 + NumPy 2
+# TensorFlow segfaults on import; PyTorch is rock-solid on this stack and the
+# architectures (LSTM/RNN) are identical.
+torch>=2.2
+
+# Backend API (live scoring + dataset upload + retrain)
+fastapi>=0.110
+uvicorn[standard]>=0.27
+python-multipart>=0.0.9
+
+# Dashboard (Streamlit alternative UI; the primary UI is the React app in web/)
+streamlit>=1.36
+plotly>=5.18
+
+# Model persistence + plotting
+joblib>=1.3
+matplotlib>=3.7
+
+# Notebook
+jupyter>=1.0
+ipykernel>=6.25
+nbformat>=5.9

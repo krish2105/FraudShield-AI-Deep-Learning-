@@ -1,0 +1,100 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #070d1c;
+  color: #e6edf7;
+  font-family: "Inter", ui-sans-serif, system-ui, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Subtle dotted background grid for the app shell */
+.app-bg {
+  background-color: #070d1c;
+  background-image:
+    radial-gradient(1200px 600px at 80% -10%, rgba(56, 189, 248, 0.08), transparent),
+    radial-gradient(900px 500px at -10% 10%, rgba(37, 99, 235, 0.1), transparent),
+    radial-gradient(circle at 1px 1px, rgba(148, 163, 184, 0.06) 1px, transparent 0);
+  background-size: auto, auto, 26px 26px;
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-navy-600/60 bg-navy-800/70 backdrop-blur
+           shadow-card;
+  }
+  .card-pad {
+    @apply p-5;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold;
+  }
+  .nav-link {
+    @apply flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium
+           text-muted transition-all duration-150 hover:bg-navy-700/70 hover:text-ink;
+  }
+  .nav-link-active {
+    @apply bg-gradient-to-r from-accent-bright/90 to-accent/70 text-white
+           shadow-glow hover:from-accent-bright hover:to-accent hover:text-white;
+  }
+  .section-title {
+    @apply flex items-center gap-2 text-base font-semibold text-ink
+           before:h-4 before:w-1 before:rounded-full before:bg-accent before:content-[''];
+  }
+  .input {
+    @apply rounded-lg border border-navy-600 bg-navy-900/80 px-3 py-2 text-sm text-ink
+           outline-none focus:border-accent focus:ring-1 focus:ring-accent;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg bg-accent-bright
+           px-4 py-2 text-sm font-semibold text-white transition
+           hover:bg-accent disabled:opacity-50;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg border border-navy-600
+           bg-navy-800 px-4 py-2 text-sm font-semibold text-ink transition hover:bg-navy-700;
+  }
+  .th {
+    @apply px-3 py-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted;
+  }
+  .td {
+    @apply px-3 py-2 text-sm text-ink/90 whitespace-nowrap;
+  }
+}
+
+/* Recharts tooltip dark theme tweaks */
+.recharts-default-tooltip {
+  background: #0f1a33 !important;
+  border: 1px solid #1c2e52 !important;
+  border-radius: 10px !important;
+  color: #e6edf7 !important;
+}
+.recharts-cartesian-axis-tick-value {
+  fill: #8aa0c2;
+  font-size: 11px;
+}
+
+/* Thin scrollbars */
+*::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #1c2e52;
+  border-radius: 9px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}

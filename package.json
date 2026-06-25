@@ -1,0 +1,23 @@
+{
+  "name": "fraudshield-ai-presentation",
+  "version": "1.0.0",
+  "description": "PptxGenJS generator for the FraudShield AI: Payment Fraud Sequence Detection (LSTM/RNN) presentation. Produces a premium fintech / C-level deck with speaker notes for Presenter View.",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "generate:ppt": "node presentation/generate_pptx.js"
+  },
+  "keywords": [
+    "fraud-detection",
+    "lstm",
+    "deep-learning",
+    "pptxgenjs",
+    "fintech",
+    "presentation"
+  ],
+  "author": "Krishna Mathur, Yash Petkar, Atharva Soundankar",
+  "license": "MIT",
+  "dependencies": {
+    "pptxgenjs": "^3.12.0"
+  }
+}
