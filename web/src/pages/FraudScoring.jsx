@@ -86,7 +86,7 @@ function LiveScore() {
             </div>
           )}
         </div>
-        {err && <p className="mt-2 text-xs text-amber-300">{err}</p>}
+        {err && <p className="mt-2 text-xs text-tone-warn">{err}</p>}
       </Section>
     </Card>
   );

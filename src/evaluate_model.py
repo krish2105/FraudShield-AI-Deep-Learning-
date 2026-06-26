@@ -63,6 +63,80 @@ def compute_metrics(y_true, y_prob, threshold: float = 0.5) -> Dict:
     return metrics
 
 
+def operating_points(y_true, y_prob) -> Dict:
+    """Fraud-appropriate operating points that a business actually cares about:
+
+      * recall_at_p90  — what fraction of fraud we catch while keeping
+                          precision >= 0.90 (few false alarms).
+      * precision_at_r90 — how clean the alerts are if we insist on catching
+                          >= 90% of fraud.
+      * best_f1 / threshold — the F1-optimal threshold.
+
+    These are far more honest for rare-event fraud than headline accuracy.
+    """
+    y_true = np.asarray(y_true).astype(int)
+    y_prob = np.asarray(y_prob).astype(float).ravel()
+    if len(np.unique(y_true)) < 2:
+        return {"recall_at_p90": None, "precision_at_r90": None,
+                "best_f1": None, "best_f1_threshold": None}
+    prec, rec, thr = precision_recall_curve(y_true, y_prob)
+    # precision_recall_curve returns len(thr) = len(prec) - 1
+    f1 = np.divide(2 * prec * rec, prec + rec,
+                   out=np.zeros_like(prec), where=(prec + rec) > 0)
+
+    def _recall_at_precision(target=0.90):
+        ok = prec >= target
+        return float(rec[ok].max()) if ok.any() else 0.0
+
+    def _precision_at_recall(target=0.90):
+        ok = rec >= target
+        return float(prec[ok].max()) if ok.any() else 0.0
+
+    best_i = int(np.argmax(f1))
+    best_thr = float(thr[best_i]) if best_i < len(thr) else 0.5
+    return {
+        "recall_at_p90": round(_recall_at_precision(0.90), 4),
+        "precision_at_r90": round(_precision_at_recall(0.90), 4),
+        "best_f1": round(float(f1[best_i]), 4),
+        "best_f1_threshold": round(best_thr, 4),
+    }
+
+
+def calibration_points(y_true, y_prob, bins: int = 10) -> list:
+    """Reliability-curve points: mean predicted prob vs observed fraud rate per
+    bin. A well-calibrated model sits on the diagonal."""
+    y_true = np.asarray(y_true).astype(int)
+    y_prob = np.asarray(y_prob).astype(float).ravel()
+    edges = np.linspace(0, 1, bins + 1)
+    out = []
+    for i in range(bins):
+        lo, hi = edges[i], edges[i + 1]
+        m = (y_prob >= lo) & (y_prob < hi if i < bins - 1 else y_prob <= hi)
+        if m.sum() == 0:
+            continue
+        out.append({
+            "predicted": round(float(y_prob[m].mean()), 4),
+            "observed": round(float(y_true[m].mean()), 4),
+            "count": int(m.sum()),
+        })
+    return out
+
+
+def reliability_note(n_test: int, n_fraud_test: int) -> dict:
+    """Flag whether the test set is large enough for metrics to be trusted.
+    Small fraud counts make perfect scores meaningless."""
+    trustworthy = n_test >= 5000 and n_fraud_test >= 50
+    if trustworthy:
+        msg = (f"Evaluated on {n_test:,} sequences with {n_fraud_test} fraud "
+               f"cases — large enough for stable metrics.")
+    else:
+        msg = (f"⚠ Evaluated on only {n_test:,} sequences / {n_fraud_test} fraud "
+               f"cases. Treat these numbers as indicative, not production-grade; "
+               f"train on the full dataset for trustworthy metrics.")
+    return {"trustworthy": trustworthy, "n_test": int(n_test),
+            "n_fraud_test": int(n_fraud_test), "message": msg}
+
+
 def _downsample(xs, ys, n=80):
     """Reduce a curve to ~n evenly spaced points (smaller JSON, smooth charts)."""
     xs = np.asarray(xs); ys = np.asarray(ys)

@@ -143,7 +143,7 @@ export default function ModelPerformance({ data }) {
               {["accuracy", "precision", "recall", "f1", "roc_auc", "pr_auc"].map((k) => (
                 <div key={k} className="rounded-xl border border-navy-600/60 bg-navy-900/50 p-3 text-center">
                   <div className="text-[11px] uppercase tracking-wider text-muted">{k.replace("_", "-")}</div>
-                  <div className="mt-1 text-xl font-bold text-white">
+                  <div className="mt-1 text-xl font-bold text-ink">
                     {typeof m[k] === "number" ? m[k].toFixed(3) : "—"}
                   </div>
                 </div>

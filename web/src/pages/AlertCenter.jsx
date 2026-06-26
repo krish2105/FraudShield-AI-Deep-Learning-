@@ -79,7 +79,7 @@ export default function AlertCenter({ data }) {
                       <td className="td">{Number(a.amount).toLocaleString()}</td>
                       <td className="td"><RiskBadge probability={a.fraud_probability} /></td>
                       <td className="td text-muted">{a.recommended_action}</td>
-                      <td className="td"><span className="pill bg-risk-high/20 text-red-200">{a.status}</span></td>
+                      <td className="td"><span className="pill bg-risk-high/20 text-tone-danger">{a.status}</span></td>
                     </tr>
                   ))}
                   {!alerts.length && (

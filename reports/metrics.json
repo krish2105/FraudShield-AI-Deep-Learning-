@@ -1,111 +1,135 @@
 {
   "dense_nn": {
-    "accuracy": 0.9928,
-    "precision": 0.6667,
-    "recall": 0.8,
-    "f1": 0.7273,
-    "roc_auc": 0.9981,
-    "pr_auc": 0.8529,
+    "accuracy": 0.9832,
+    "precision": 0.5455,
+    "recall": 0.75,
+    "f1": 0.6316,
+    "roc_auc": 0.8664,
+    "pr_auc": 0.4139,
     "confusion_matrix": [
       [
-        410,
-        2
+        404,
+        5
       ],
       [
-        1,
-        4
+        2,
+        6
       ]
     ],
     "threshold": 0.5,
     "n_samples": 417,
-    "n_fraud": 5
+    "n_fraud": 8,
+    "recall_at_p90": 0.0,
+    "precision_at_r90": 0.0192,
+    "best_f1": 0.6316,
+    "best_f1_threshold": 0.5
   },
   "lstm": {
-    "accuracy": 1.0,
-    "precision": 1.0,
-    "recall": 1.0,
-    "f1": 1.0,
-    "roc_auc": 1.0,
-    "pr_auc": 1.0,
+    "accuracy": 0.9832,
+    "precision": 0.5714,
+    "recall": 0.5,
+    "f1": 0.5333,
+    "roc_auc": 0.8097,
+    "pr_auc": 0.5853,
     "confusion_matrix": [
       [
-        412,
-        0
+        406,
+        3
       ],
       [
-        0,
-        5
+        4,
+        4
       ]
     ],
     "threshold": 0.5,
     "n_samples": 417,
-    "n_fraud": 5
+    "n_fraud": 8,
+    "recall_at_p90": 0.5,
+    "precision_at_r90": 0.0192,
+    "best_f1": 0.6667,
+    "best_f1_threshold": 1.0
   },
   "gru": {
-    "accuracy": 1.0,
-    "precision": 1.0,
+    "accuracy": 0.9928,
+    "precision": 0.7273,
     "recall": 1.0,
-    "f1": 1.0,
+    "f1": 0.8421,
     "roc_auc": 1.0,
     "pr_auc": 1.0,
     "confusion_matrix": [
       [
-        412,
-        0
+        406,
+        3
       ],
       [
         0,
-        5
+        8
       ]
     ],
     "threshold": 0.5,
     "n_samples": 417,
-    "n_fraud": 5
+    "n_fraud": 8,
+    "recall_at_p90": 1.0,
+    "precision_at_r90": 1.0,
+    "best_f1": 1.0,
+    "best_f1_threshold": 0.8066
   },
   "cnn": {
-    "accuracy": 0.9952,
-    "precision": 0.7143,
-    "recall": 1.0,
-    "f1": 0.8333,
-    "roc_auc": 0.999,
-    "pr_auc": 0.9429,
+    "accuracy": 0.9856,
+    "precision": 0.6,
+    "recall": 0.75,
+    "f1": 0.6667,
+    "roc_auc": 0.9927,
+    "pr_auc": 0.751,
     "confusion_matrix": [
       [
-        410,
-        2
-      ],
-      [
-        0,
-        5
-      ]
-    ],
-    "threshold": 0.5,
-    "n_samples": 417,
-    "n_fraud": 5
-  },
-  "autoencoder": {
-    "accuracy": 0.9904,
-    "precision": 0.5556,
-    "recall": 1.0,
-    "f1": 0.7143,
-    "roc_auc": 0.9976,
-    "pr_auc": 0.71,
-    "confusion_matrix": [
-      [
-        408,
+        405,
         4
       ],
       [
-        0,
-        5
+        2,
+        6
       ]
     ],
     "threshold": 0.5,
     "n_samples": 417,
-    "n_fraud": 5
+    "n_fraud": 8,
+    "recall_at_p90": 0.375,
+    "precision_at_r90": 0.4444,
+    "best_f1": 0.6667,
+    "best_f1_threshold": 0.2668
+  },
+  "autoencoder": {
+    "accuracy": 0.9664,
+    "precision": 0.3636,
+    "recall": 1.0,
+    "f1": 0.5333,
+    "roc_auc": 0.9948,
+    "pr_auc": 0.6337,
+    "confusion_matrix": [
+      [
+        395,
+        14
+      ],
+      [
+        0,
+        8
+      ]
+    ],
+    "threshold": 0.5,
+    "n_samples": 417,
+    "n_fraud": 8
   },
   "status": "TRAINED",
-  "primary": "lstm",
+  "primary": "gru",
   "data_source": "real",
+  "split": "temporal (past\u2192future)",
+  "calibrated": true,
+  "reliability": {
+    "trustworthy": false,
+    "n_test": 417,
+    "n_fraud_test": 8,
+    "message": "\u26a0 Evaluated on only 417 sequences / 8 fraud cases. Treat these numbers as indicative, not production-grade; train on the full dataset for trustworthy metrics."
+  },
   "note": "Trained on REAL PaySim data."
 }

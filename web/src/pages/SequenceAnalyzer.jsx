@@ -135,7 +135,7 @@ function Metric({ label, value }) {
   return (
     <div>
       <div className="mb-1 text-[11px] uppercase tracking-wider text-muted">{label}</div>
-      <div className="text-xl font-bold text-white">{value}</div>
+      <div className="text-xl font-bold text-ink">{value}</div>
     </div>
   );
 }

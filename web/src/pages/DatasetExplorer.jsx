@@ -138,7 +138,7 @@ function Stat({ label, value }) {
   return (
     <Card className="!p-4">
       <div className="text-[11px] uppercase tracking-wider text-muted">{label}</div>
-      <div className="mt-1 text-xl font-bold text-white">{value}</div>
+      <div className="mt-1 text-xl font-bold text-ink">{value}</div>
     </Card>
   );
 }

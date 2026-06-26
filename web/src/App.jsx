@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
-import { Menu, Loader2, ShieldAlert, SlidersHorizontal } from "lucide-react";
+import { Menu, Loader2, ShieldAlert, SlidersHorizontal, Sun, Moon } from "lucide-react";
 import Sidebar from "./components/Sidebar.jsx";
 import DatasetManager from "./components/DatasetManager.jsx";
 import { useDashboard } from "./lib/data.js";
+import { useTheme } from "./lib/theme.js";
 
 import ExecutiveOverview from "./pages/ExecutiveOverview.jsx";
 import DatasetExplorer from "./pages/DatasetExplorer.jsx";
@@ -14,12 +15,12 @@ import ModelPerformance from "./pages/ModelPerformance.jsx";
 import Explainability from "./pages/Explainability.jsx";
 import AlertCenter from "./pages/AlertCenter.jsx";
 import BusinessImpact from "./pages/BusinessImpact.jsx";
-import Recommendations from "./pages/Recommendations.jsx";
 
 export default function App() {
   const [sidebar, setSidebar] = useState(false);
   const [manager, setManager] = useState(false);
   const { data, loading, error, reload } = useDashboard();
+  const { theme, toggle } = useTheme();
 
   return (
     <div className="app-bg flex min-h-screen text-ink">
@@ -39,27 +40,37 @@ export default function App() {
           <div className="hidden text-sm text-muted lg:block">
             Payment Fraud Sequence Detection · <span className="text-ink">LSTM / RNN</span>
           </div>
-          <button
-            className="flex items-center gap-2 rounded-lg border border-navy-600 bg-navy-800/60 px-2.5 py-1.5 transition hover:border-accent hover:bg-navy-700"
-            onClick={() => setManager(true)}
-            title="Open Dataset & Model Manager"
-          >
-            {data?.meta && (
-              <span
-                className={`pill ${
-                  data.meta.mode === "demo"
-                    ? "bg-risk-med/20 text-amber-200"
-                    : "bg-risk-low/20 text-emerald-200"
-                }`}
-              >
-                {data.meta.mode === "demo" ? "Demo mode" : "Model mode"}
+          <div className="flex items-center gap-2">
+            <button
+              className="icon-btn"
+              onClick={toggle}
+              aria-label={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+              title={`Switch to ${theme === "light" ? "dark" : "light"} mode`}
+            >
+              {theme === "light" ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
+            <button
+              className="flex items-center gap-2 rounded-lg border border-navy-600 bg-navy-800/60 px-2.5 py-1.5 transition hover:border-accent hover:bg-navy-700"
+              onClick={() => setManager(true)}
+              title="Open Dataset & Model Manager"
+            >
+              {data?.meta && (
+                <span
+                  className={`pill ${
+                    data.meta.mode === "demo"
+                      ? "bg-risk-med/20 text-risk-med"
+                      : "bg-risk-low/20 text-risk-low"
+                  }`}
+                >
+                  {data.meta.mode === "demo" ? "Demo mode" : "Model mode"}
+                </span>
+              )}
+              <span className="pill bg-navy-700 text-muted">
+                {data?.meta?.source === "real" ? "Real data" : "Sample data"}
               </span>
-            )}
-            <span className="pill bg-navy-700 text-muted">
-              {data?.meta?.source === "real" ? "Real data" : "Sample data"}
-            </span>
-            <SlidersHorizontal size={15} className="text-muted" />
-          </button>
+              <SlidersHorizontal size={15} className="text-muted" />
+            </button>
+          </div>
         </header>
 
         <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 lg:px-8">
@@ -75,7 +86,7 @@ export default function App() {
             <div className="grid h-[60vh] place-items-center">
               <div className="card card-pad max-w-lg text-center">
                 <ShieldAlert className="mx-auto mb-3 text-risk-high" size={36} />
-                <h2 className="mb-2 text-lg font-bold text-white">
+                <h2 className="mb-2 text-lg font-bold text-ink">
                   Could not load dashboard data
                 </h2>
                 <p className="text-sm text-muted">{String(error.message || error)}</p>
@@ -98,7 +109,6 @@ export default function App() {
               <Route path="/explainability" element={<Explainability data={data} />} />
               <Route path="/alerts" element={<AlertCenter data={data} />} />
               <Route path="/impact" element={<BusinessImpact data={data} />} />
-              <Route path="/recommendations" element={<Recommendations data={data} />} />
             </Routes>
           )}
         </main>

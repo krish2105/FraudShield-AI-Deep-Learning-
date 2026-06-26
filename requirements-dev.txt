@@ -1,0 +1,10 @@
+# FraudShield AI - development / MLOps dependencies
+# Install with:  pip install -r requirements-dev.txt
+# (these are not required to run the demo, only for tests + experiment tracking)
+
+-r requirements.txt
+
+pytest==9.1.1
+httpx==0.28.1          # FastAPI TestClient transport
+mlflow>=2.12           # local experiment tracking + model registry (file backend)
+ruff>=0.5             # linting

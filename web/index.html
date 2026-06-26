@@ -11,6 +11,20 @@
       rel="stylesheet"
     />
     <title>FraudShield AI — Payment Fraud Sequence Detection</title>
+    <!-- Apply the saved/system theme before paint to avoid a flash of wrong theme -->
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("fraudshield-theme");
+          if (t !== "light" && t !== "dark") {
+            t = window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
+          }
+          var r = document.documentElement;
+          if (t === "light") r.classList.add("light");
+          r.style.colorScheme = t;
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

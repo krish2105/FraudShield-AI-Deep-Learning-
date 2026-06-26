@@ -1,31 +1,44 @@
-# FraudShield AI - Python dependencies
+# FraudShield AI - Python dependencies (pinned to verified-working versions)
 # Install with:  pip install -r requirements.txt
+#
+# Versions are pinned for reproducible builds (Phase 0 hardening). They are the
+# exact versions this project was developed and tested against on macOS
+# (Apple Silicon, Python 3.13). Loosen only deliberately.
 
-# Core data stack
-pandas>=2.0
-numpy>=1.24
-scikit-learn>=1.3
+# --- Core data stack ---
+pandas==2.2.3
+numpy==2.1.3
+scikit-learn==1.6.1
 
-# Deep learning (LSTM / GRU / 1D-CNN / Autoencoder) — PyTorch.
-# NOTE: we use PyTorch, not TensorFlow. On Apple Silicon + Python 3.13 + NumPy 2
-# TensorFlow segfaults on import; PyTorch is rock-solid on this stack and the
-# architectures (LSTM/RNN) are identical.
-torch>=2.2
+# --- Deep learning (LSTM / GRU / 1D-CNN / Autoencoder) — PyTorch ---
+# We use PyTorch, not TensorFlow: on Apple Silicon + Python 3.13 + NumPy 2,
+# TensorFlow segfaults on import. The architectures (LSTM/RNN) are identical.
+torch==2.11.0
 
-# Backend API (live scoring + dataset upload + retrain)
-fastapi>=0.110
-uvicorn[standard]>=0.27
-python-multipart>=0.0.9
+# --- Backend API (live scoring + dataset upload + retrain + hardening) ---
+fastapi==0.128.0
+uvicorn[standard]==0.49.0
+python-multipart==0.0.32
+pydantic-settings==2.6.1   # 12-factor env config
+PyJWT==2.10.1              # API auth (Phase 4)
+slowapi==0.1.10           # rate limiting (Phase 4)
+prometheus-client==0.21.1 # /metrics observability (Phase 5)
 
-# Dashboard (Streamlit alternative UI; the primary UI is the React app in web/)
-streamlit>=1.36
-plotly>=5.18
+# --- Persistence (Phase 2: SQLite by default, Postgres-ready) ---
+SQLAlchemy==2.0.39
+psycopg2-binary==2.9.10   # Postgres driver (used only if DATABASE_URL is Postgres)
 
-# Model persistence + plotting
-joblib>=1.3
-matplotlib>=3.7
+# --- Dashboards ---
+streamlit==1.45.1
+plotly==5.24.1
 
-# Notebook
-jupyter>=1.0
-ipykernel>=6.25
-nbformat>=5.9
+# --- Model persistence + plotting ---
+joblib==1.4.2
+matplotlib==3.10.0
+
+# --- Notebook ---
+jupyter==1.1.1
+ipykernel==6.29.5
+nbformat==5.10.4
+
+# Optional (install via requirements-dev.txt): mlflow, pytest, httpx

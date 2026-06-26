@@ -81,14 +81,14 @@ export default function DatasetManager({ open, onClose, onChanged }) {
         <div className="flex items-center justify-between border-b border-navy-600/60 px-5 py-4">
           <div className="flex items-center gap-2">
             <Database className="text-accent-cyan" size={20} />
-            <h2 className="text-lg font-bold text-white">Dataset & Model Manager</h2>
+            <h2 className="text-lg font-bold text-ink">Dataset & Model Manager</h2>
           </div>
-          <button onClick={onClose} className="text-muted hover:text-white"><X size={20} /></button>
+          <button onClick={onClose} className="text-muted hover:text-ink"><X size={20} /></button>
         </div>
 
         <div className="card-pad space-y-5">
           {backend === false && (
-            <div className="rounded-xl border border-risk-med/40 bg-risk-med/10 p-4 text-sm text-amber-200">
+            <div className="rounded-xl border border-risk-med/40 bg-risk-med/10 p-4 text-sm text-tone-warn">
               <AlertTriangle className="mb-1 inline" size={16} /> The backend API isn't running,
               so live upload / retrain are unavailable. Start it with:
               <pre className="mt-2 overflow-auto rounded bg-navy-950 p-2 text-xs text-accent-cyan">uvicorn api.main:app --port 8000</pre>
@@ -110,7 +110,7 @@ export default function DatasetManager({ open, onClose, onChanged }) {
 
           {/* Upload real PaySim */}
           <div className="rounded-xl border border-navy-600/60 bg-navy-900/50 p-4">
-            <div className="mb-2 flex items-center gap-2 font-semibold text-white">
+            <div className="mb-2 flex items-center gap-2 font-semibold text-ink">
               <Upload size={16} className="text-accent-cyan" /> Connect the real PaySim dataset
             </div>
             <p className="mb-3 text-xs text-muted">
@@ -126,7 +126,7 @@ export default function DatasetManager({ open, onClose, onChanged }) {
 
           {/* Retrain */}
           <div className="rounded-xl border border-navy-600/60 bg-navy-900/50 p-4">
-            <div className="mb-2 flex items-center gap-2 font-semibold text-white">
+            <div className="mb-2 flex items-center gap-2 font-semibold text-ink">
               <Cpu size={16} className="text-accent-cyan" /> Retrain models
             </div>
             <p className="mb-3 text-xs text-muted">
@@ -140,12 +140,12 @@ export default function DatasetManager({ open, onClose, onChanged }) {
           </div>
 
           {msg && (
-            <div className="flex items-start gap-2 rounded-xl border border-risk-low/40 bg-risk-low/10 p-3 text-sm text-emerald-200">
+            <div className="flex items-start gap-2 rounded-xl border border-risk-low/40 bg-risk-low/10 p-3 text-sm text-tone-ok">
               <CheckCircle2 size={16} className="mt-0.5" /> {msg}
             </div>
           )}
           {err && (
-            <div className="flex items-start gap-2 rounded-xl border border-risk-high/40 bg-risk-high/10 p-3 text-sm text-red-200">
+            <div className="flex items-start gap-2 rounded-xl border border-risk-high/40 bg-risk-high/10 p-3 text-sm text-tone-danger">
               <AlertTriangle size={16} className="mt-0.5" /> {err}
             </div>
           )}
@@ -163,7 +163,7 @@ export default function DatasetManager({ open, onClose, onChanged }) {
 }
 
 function Stat({ label, value, tone }) {
-  const color = tone === "good" ? "text-emerald-300" : tone === "warn" ? "text-amber-300" : "text-white";
+  const color = tone === "good" ? "text-tone-ok" : tone === "warn" ? "text-tone-warn" : "text-ink";
   return (
     <div className="rounded-lg border border-navy-600/60 bg-navy-800/60 p-3">
       <div className="text-[10px] uppercase tracking-wider text-muted">{label}</div>

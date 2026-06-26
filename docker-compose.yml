@@ -1,0 +1,42 @@
+# FraudShield AI — local full stack.
+#   docker compose up --build
+#
+# Brings up the API (serving the React app) with a Postgres database and a
+# Redis cache, demonstrating the corporate target topology (docs/ARCHITECTURE.md).
+# By default the API uses SQLite; set FRAUDSHIELD_DATABASE_URL (below) to use
+# the bundled Postgres instead.
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      # Switch to Postgres by uncommenting the next line:
+      # FRAUDSHIELD_DATABASE_URL: postgresql+psycopg2://fraud:fraud@db:5432/fraudshield
+      FRAUDSHIELD_PERSIST_SCORES: "1"
+      FRAUDSHIELD_RATE_LIMIT: "120/minute"
+      # Set an API key to require X-API-Key on scoring/training endpoints:
+      # FRAUDSHIELD_API_KEY: "change-me"
+    depends_on:
+      - db
+      - redis
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fraud
+      POSTGRES_PASSWORD: fraud
+      POSTGRES_DB: fraudshield
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:

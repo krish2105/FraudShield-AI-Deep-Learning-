@@ -22,30 +22,90 @@ from __future__ import annotations
 
 import io
 import sys
+import time
+import uuid
 import threading
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import pandas as pd
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Header, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src import config                                   # noqa: E402
+from src.settings import settings                        # noqa: E402
+from src import db                                       # noqa: E402
 from src.data_loader import load_data, basic_overview    # noqa: E402
 from src.predict import score_one, score_transactions, model_available  # noqa: E402
 from src.export_dashboard_data import build_payload, write_snapshot  # noqa: E402
 from src.utils import read_json, log                     # noqa: E402
 
-app = FastAPI(title="FraudShield AI API", version="1.0.0")
+# --- Observability (Prometheus). Degrades gracefully if not installed. -------
+try:
+    from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
+    _SCORE_COUNT = Counter("fraudshield_scores_total", "Scores served", ["mode", "band"])
+    _REQ_LATENCY = Histogram("fraudshield_request_seconds", "Request latency", ["endpoint"])
+    _HAVE_PROM = True
+except Exception:  # pragma: no cover
+    _HAVE_PROM = False
+
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    try:
+        db.init_db()
+    except Exception as exc:  # never let DB issues stop the API from serving
+        log(f"DB init failed ({exc}); continuing without persistence.")
+    # Pre-warm the dashboard payload in the background so the FIRST request is
+    # instant (no cold-build lag during a live demo).
+    def _prewarm():
+        try:
+            _payload()
+            log("Dashboard payload pre-warmed.")
+        except Exception as exc:  # pragma: no cover
+            log(f"Dashboard pre-warm skipped ({exc}).")
+    threading.Thread(target=_prewarm, daemon=True).start()
+    log(f"FraudShield API up. auth_required={settings.auth_required} "
+        f"persist_scores={settings.persist_scores}")
+    yield
+
+
+app = FastAPI(title="FraudShield AI API", version="2.0.0", lifespan=_lifespan)
 app.add_middleware(
-    CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
+    CORSMiddleware, allow_origins=settings.cors_list,
+    allow_methods=["*"], allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def _observability(request: Request, call_next):
+    """Attach a request id, time the request, and feed Prometheus."""
+    rid = request.headers.get("X-Request-ID") or uuid.uuid4().hex[:16]
+    request.state.request_id = rid
+    start = time.perf_counter()
+    response = await call_next(request)
+    elapsed = time.perf_counter() - start
+    response.headers["X-Request-ID"] = rid
+    response.headers["X-Response-Time-ms"] = f"{elapsed * 1000:.1f}"
+    if _HAVE_PROM:
+        try:
+            _REQ_LATENCY.labels(endpoint=request.url.path).observe(elapsed)
+        except Exception:
+            pass
+    return response
+
+
+def require_api_key(x_api_key: str | None = Header(default=None)) -> None:
+    """Dependency: enforce X-API-Key only when an API key is configured.
+    With no key set (the default for the local demo) this is a no-op."""
+    if settings.auth_required and x_api_key != settings.api_key:
+        raise HTTPException(401, "Invalid or missing X-API-Key.")
 
 # ---------------------------------------------------------------------------
 # In-memory cache + training state (so the heavy payload isn't rebuilt per call)
@@ -59,12 +119,25 @@ REQUIRED_COLUMNS = [
 ]
 
 
+def _sanitize(obj):
+    """Recursively replace NaN/Inf with None so the payload is JSON-compliant.
+    (Large datasets can produce NaN in correlations; strict JSON rejects them.)"""
+    import math
+    if isinstance(obj, float):
+        return None if (math.isnan(obj) or math.isinf(obj)) else obj
+    if isinstance(obj, dict):
+        return {k: _sanitize(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_sanitize(v) for v in obj]
+    return obj
+
+
 def _payload(force: bool = False):
     """Build (and cache) the dashboard payload, and keep the static snapshot
     in sync so a plain browser refresh always shows the latest data."""
     with _LOCK:
         if _STATE["payload"] is None or force:
-            _STATE["payload"] = build_payload()
+            _STATE["payload"] = _sanitize(build_payload())
             try:
                 write_snapshot(_STATE["payload"])   # self-heal the snapshot
             except Exception as exc:                # pragma: no cover
@@ -118,19 +191,36 @@ class ScoreRequest(BaseModel):
 
 
 @app.post("/api/score")
-def score(req: ScoreRequest):
+def score(req: ScoreRequest, request: Request, _: None = Depends(require_api_key)):
     try:
-        return score_one(req.transaction, req.history)
+        result = score_one(req.transaction, req.history)
     except Exception as exc:
         raise HTTPException(400, f"Scoring failed: {exc}")
+    rid = getattr(request.state, "request_id", uuid.uuid4().hex[:16])
+    result["request_id"] = rid
+    db.record_score(rid, req.transaction, result)          # immutable audit trail
+    if _HAVE_PROM:
+        try:
+            _SCORE_COUNT.labels(mode=result.get("mode", "?"),
+                                band=result.get("band", "?")).inc()
+        except Exception:
+            pass
+    return result
+
+
+@app.post("/api/explain")
+def explain(req: ScoreRequest, _: None = Depends(require_api_key)):
+    """Plain-English reason codes for why a transaction is risky (Phase 7)."""
+    from src.explain import explain_transaction
+    return explain_transaction(req.transaction)
 
 
 class BatchRequest(BaseModel):
-    transactions: list[dict]
+    transactions: list[dict] = Field(..., min_length=1, max_length=50_000)
 
 
 @app.post("/api/score/batch")
-def score_batch(req: BatchRequest):
+def score_batch(req: BatchRequest, _: None = Depends(require_api_key)):
     if not req.transactions:
         raise HTTPException(400, "No transactions supplied.")
     df = pd.DataFrame(req.transactions)
@@ -145,7 +235,8 @@ def score_batch(req: BatchRequest):
 # Dataset upload (connect the real PaySim file)
 # ---------------------------------------------------------------------------
 @app.post("/api/dataset")
-async def upload_dataset(file: UploadFile = File(...)):
+async def upload_dataset(file: UploadFile = File(...),
+                         _: None = Depends(require_api_key)):
     raw = await file.read()
     try:
         df = pd.read_csv(io.BytesIO(raw))
@@ -197,7 +288,7 @@ def _run_training(epochs: int):
 
 
 @app.post("/api/train")
-def train(epochs: int = config.EPOCHS):
+def train(epochs: int = config.EPOCHS, _: None = Depends(require_api_key)):
     if _STATE["training"]:
         return {"ok": False, "message": "Training already in progress."}
     threading.Thread(target=_run_training, args=(epochs,), daemon=True).start()
@@ -206,7 +297,58 @@ def train(epochs: int = config.EPOCHS):
 
 @app.get("/api/health")
 def health():
-    return {"ok": True, "service": "FraudShield AI API"}
+    return {"ok": True, "service": "FraudShield AI API", "version": app.version}
+
+
+# ---------------------------------------------------------------------------
+# Audit trail (Phase 2/5) — proves every decision is recorded
+# ---------------------------------------------------------------------------
+@app.get("/api/audit")
+def audit(_: None = Depends(require_api_key)):
+    return db.audit_summary()
+
+
+class DecisionRequest(BaseModel):
+    request_id: str
+    analyst: str = "analyst"
+    verdict: str = Field(..., pattern="^(fraud|genuine)$")
+    notes: str = ""
+
+
+@app.post("/api/decision")
+def decision(req: DecisionRequest, _: None = Depends(require_api_key)):
+    """Record an analyst verdict — closes the feedback loop for future training."""
+    db.record_decision(req.request_id, req.analyst, req.verdict, req.notes)
+    return {"ok": True, "message": "Decision recorded."}
+
+
+# ---------------------------------------------------------------------------
+# Observability (Phase 5) — Prometheus scrape endpoint
+# ---------------------------------------------------------------------------
+@app.get("/metrics")
+def metrics():
+    if not _HAVE_PROM:
+        raise HTTPException(503, "prometheus_client not installed.")
+    return PlainTextResponse(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+# ---------------------------------------------------------------------------
+# Versioned API (Phase 4) — /api/v1/* aliases the stable endpoints
+# ---------------------------------------------------------------------------
+from fastapi import APIRouter  # noqa: E402
+
+v1 = APIRouter(prefix="/api/v1", tags=["v1"])
+v1.add_api_route("/status", status, methods=["GET"])
+v1.add_api_route("/dashboard", dashboard, methods=["GET"])
+v1.add_api_route("/score", score, methods=["POST"])
+v1.add_api_route("/score/batch", score_batch, methods=["POST"])
+v1.add_api_route("/explain", explain, methods=["POST"])
+v1.add_api_route("/dataset", upload_dataset, methods=["POST"])
+v1.add_api_route("/train", train, methods=["POST"])
+v1.add_api_route("/audit", audit, methods=["GET"])
+v1.add_api_route("/decision", decision, methods=["POST"])
+v1.add_api_route("/health", health, methods=["GET"])
+app.include_router(v1)
 
 
 # ---------------------------------------------------------------------------

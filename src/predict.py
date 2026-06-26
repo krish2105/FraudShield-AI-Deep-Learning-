@@ -96,6 +96,13 @@ def score_transactions(df: pd.DataFrame) -> Tuple[pd.DataFrame, str]:
         probs = np.full(len(out), np.nan)
         if len(X):
             preds = dl.predict_proba(model, X, lengths)
+            # Apply the saved isotonic calibrator so the score is a true
+            # probability and the 0.30 / 0.70 risk bands are meaningful.
+            try:
+                from . import calibration as _cal
+            except ImportError:  # pragma: no cover
+                from src import calibration as _cal
+            preds = _cal.apply_calibrator(_cal.load_calibrator(), preds)
             for i, p in zip(idx, preds):
                 probs[i] = float(p)
         # any rows without a sequence prediction -> demo score (safety net)

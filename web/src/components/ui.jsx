@@ -12,7 +12,7 @@ export function PageHeader({ title, subtitle, icon: Icon }) {
           </span>
         ) : null}
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-white">{title}</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-ink">{title}</h1>
           {subtitle ? <p className="mt-0.5 text-sm text-muted">{subtitle}</p> : null}
         </div>
       </div>
@@ -52,7 +52,7 @@ export function KpiCard({ label, value, sub, accent = "#3b82f6", icon: Icon }) {
           </span>
         ) : null}
       </div>
-      <div className="mt-2 text-2xl font-extrabold text-white">{value}</div>
+      <div className="mt-2 text-2xl font-extrabold text-ink">{value}</div>
       {sub ? <div className="mt-1 text-xs text-muted">{sub}</div> : null}
     </div>
   );
@@ -69,9 +69,9 @@ export function RiskBadge({ probability, label }) {
 
 export function Banner({ tone = "warn", title, children }) {
   const tones = {
-    warn: "border-risk-med/40 bg-risk-med/10 text-amber-200",
-    info: "border-accent/40 bg-accent/10 text-sky-200",
-    danger: "border-risk-high/40 bg-risk-high/10 text-red-200",
+    warn: "border-risk-med/40 bg-risk-med/10 text-tone-warn",
+    info: "border-accent/40 bg-accent/10 text-tone-info",
+    danger: "border-risk-high/40 bg-risk-high/10 text-tone-danger",
   };
   return (
     <div className={`mb-5 rounded-xl border px-4 py-3 text-sm ${tones[tone]}`}>

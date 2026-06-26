@@ -59,6 +59,7 @@ def _r(x, n=4):
 
 
 MAX_SCORING_ROWS = 40000   # cap for responsiveness on the full 6.3M PaySim file
+MAX_STEP_BUCKETS = 300     # bin the time axis so byStep never explodes the JSON
 
 
 def build_payload() -> dict:
@@ -118,16 +119,40 @@ def build_payload() -> dict:
         by_type.sort(key=lambda d: d["fraud"], reverse=True)
 
     # ---- by time step (volume+fraud from FULL, highRisk from sample) -----
+    # Robust to ANY step scale: real PaySim uses hours (~743 unique), but a
+    # globally-increasing step (or a huge file) can have hundreds of thousands
+    # of unique values — which would explode the payload. When the cardinality
+    # is large we bin steps into ~MAX_STEP_BUCKETS ordered buckets so the chart
+    # stays readable and the JSON stays small.
     by_step = []
-    if "step" in full_df.columns:
-        fs = full_df.groupby("step").agg(
-            transactions=("amount", "size"),
-            fraud=("isFraud", "sum") if has_fraud else ("amount", "size")).reset_index()
-        ss = scored.groupby("step")["_hr"].sum()
-        by_step = [{"step": int(r.step), "transactions": int(r.transactions),
-                    "fraud": int(r.fraud),
-                    "highRisk": int(round(float(ss.get(int(r.step), 0)) * scale))}
-                   for r in fs.itertuples()]
+    if "step" in full_df.columns and full_total:
+        steps_full = full_df["step"].to_numpy()
+        n_unique = len(np.unique(steps_full))
+        if n_unique > MAX_STEP_BUCKETS:
+            edges = np.linspace(float(steps_full.min()), float(steps_full.max()) + 1,
+                                MAX_STEP_BUCKETS + 1)
+            fb = np.clip(np.digitize(steps_full, edges) - 1, 0, MAX_STEP_BUCKETS - 1)
+            sb = np.clip(np.digitize(scored["step"].to_numpy(), edges) - 1, 0,
+                         MAX_STEP_BUCKETS - 1)
+            tmp = full_df.assign(_sb=fb)
+            agg = tmp.groupby("_sb").agg(
+                transactions=("amount", "size"),
+                fraud=("isFraud", "sum") if has_fraud else ("amount", "size"))
+            ss = pd.Series(scored["_hr"].to_numpy()).groupby(sb).sum()
+            by_step = [{"step": int((edges[b] + edges[b + 1]) / 2),
+                        "transactions": int(row.transactions),
+                        "fraud": int(row.fraud),
+                        "highRisk": int(round(float(ss.get(b, 0)) * scale))}
+                       for b, row in agg.iterrows()]
+        else:
+            fs = full_df.groupby("step").agg(
+                transactions=("amount", "size"),
+                fraud=("isFraud", "sum") if has_fraud else ("amount", "size")).reset_index()
+            ss = scored.groupby("step")["_hr"].sum()
+            by_step = [{"step": int(r.step), "transactions": int(r.transactions),
+                        "fraud": int(r.fraud),
+                        "highRisk": int(round(float(ss.get(int(r.step), 0)) * scale))}
+                       for r in fs.itertuples()]
 
     # ---- by amount band (counts from FULL, risk rate from sample) --------
     full_band = pd.cut(full_df["amount"], bins=bins, labels=labels)
@@ -294,13 +319,27 @@ def build_payload() -> dict:
     }
 
 
+def _strict_clean(obj):
+    """Recursively replace NaN/Inf with None so the snapshot is STRICT JSON.
+    Browsers' JSON.parse rejects the bare NaN/Infinity tokens that Python's
+    json.dump would otherwise emit — that breaks the whole dashboard."""
+    if isinstance(obj, float):
+        return None if (math.isnan(obj) or math.isinf(obj)) else obj
+    if isinstance(obj, dict):
+        return {k: _strict_clean(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_strict_clean(v) for v in obj]
+    return obj
+
+
 def write_snapshot(payload: dict) -> str:
-    """Write a payload to the static snapshot the React app loads first."""
+    """Write a payload to the static snapshot the React app loads first.
+    Always emits strict, browser-parseable JSON (no NaN/Infinity)."""
     import json
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(OUT_PATH, "w", encoding="utf-8") as f:
-        json.dump(payload, f, separators=(",", ":"))
+        json.dump(_strict_clean(payload), f, separators=(",", ":"), allow_nan=False)
     return str(OUT_PATH)
 
 

@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard, Database, Target, GitBranch, Search, LineChart,
-  Lightbulb, Bell, PiggyBank, CheckCircle2, ShieldCheck,
+  Lightbulb, Bell, PiggyBank, ShieldCheck,
 } from "lucide-react";
 
 export const NAV = [
@@ -14,7 +14,6 @@ export const NAV = [
   { to: "/explainability", label: "Explainability", icon: Lightbulb },
   { to: "/alerts", label: "Alert Center", icon: Bell },
   { to: "/impact", label: "Business Impact", icon: PiggyBank },
-  { to: "/recommendations", label: "Recommendations", icon: CheckCircle2 },
 ];
 
 export default function Sidebar({ open, onClose }) {
@@ -37,7 +36,7 @@ export default function Sidebar({ open, onClose }) {
             <ShieldCheck size={24} />
           </span>
           <div>
-            <div className="text-lg font-black tracking-tight text-white">FraudShield AI</div>
+            <div className="text-lg font-black tracking-tight text-ink">FraudShield AI</div>
             <div className="text-[10px] uppercase tracking-[0.18em] text-accent-cyan">
               Fraud Sequence Detection
             </div>
